@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Easing, interpolate, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import type {Colors} from './types';
 export const SANS = '"SF Pro Display", "Inter Display", Inter, -apple-system, Helvetica, sans-serif';
 export const SERIF = 'Georgia, "Liberation Serif", "Times New Roman", serif';
@@ -12,6 +12,18 @@ export const tween = (f: number, a: number, b: number, from: number, to: number,
 export const pulse = (frame: number, fps: number, bpm = 100) => {
   const ph = ((frame / fps) * bpm / 60) % 1;
   return Math.pow(1 - ph, 3);
+};
+export const SeqOffset = React.createContext(0);
+// Pulso 0..1 anclado a los beats detectados (o bpm); usa el tiempo absoluto del video.
+export const usePulse = (cfg: {bpm?: number; beats?: number[]}) => {
+  const {fps} = useVideoConfig();
+  const t = (useCurrentFrame() + React.useContext(SeqOffset)) / fps;
+  if (cfg.beats?.length) {
+    let last = -1;
+    for (const b of cfg.beats) { if (b <= t) last = b; else break; }
+    return last < 0 ? 0 : Math.pow(Math.max(0, 1 - (t - last) / 0.45), 3);
+  }
+  return pulse(t * fps, fps, cfg.bpm);
 };
 export const Ambient: React.FC<{colors: Colors; strength?: number}> = ({colors, strength = 1}) => {
   const f = useCurrentFrame();

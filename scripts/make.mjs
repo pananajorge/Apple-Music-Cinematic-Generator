@@ -39,7 +39,7 @@ const cover = found(dir, 'cover', ['jpg', 'png', 'jpeg']); cfg.cover = cover && 
 const photo = found(dir, 'photo', ['png', 'jpg', 'jpeg']); cfg.photo = photo && `songs/${slug}/${photo}`;
 if (!photo) missing.push(`FOTO del artista: falta ${dir}/photo.png (PNG recortado ideal). Se usa la portada en su lugar.`);
 // 3) Colores desde la portada (ffmpeg -> 16x16 RGB, elige los más vivos)
-if (cover) {
+if (cover && !cfg.colorsLocked) {
   const px = execFileSync('ffmpeg', ['-v', 'error', '-i', path.join(dir, cover), '-vf', 'scale=16:16', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], {maxBuffer: 1e6});
   const list = []; for (let i = 0; i < px.length; i += 3) { const [r, g, b] = [px[i], px[i + 1], px[i + 2]]; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); list.push({r, g, b, s: (mx - mn) * (0.4 + mx / 255)}); }
   list.sort((a, b) => b.s - a.s); const pick = [list[0]]; for (const c of list) if (pick.length < 3 && pick.every((p) => Math.abs(p.r - c.r) + Math.abs(p.g - c.g) + Math.abs(p.b - c.b) > 140)) pick.push(c);
@@ -48,6 +48,15 @@ if (cover) {
 }
 // 4) Audio: archivo autorizado en la carpeta (audio.mp3/wav/m4a/flac) -> recorte con ffmpeg
 const src = found(dir, 'source', ['mp3', 'wav', 'm4a', 'flac', 'aac', 'ogg']);
+// 4b) Letras (lyrics.pdf/.txt) + audio -> alineación forzada automática y elección del estribillo (scripts/align_lyrics.py)
+if (src && found(dir, 'lyrics', ['pdf', 'txt']) && !args.includes('--no-align')) {
+  try {
+    execFileSync('python3', ['scripts/align_lyrics.py', dir, '--duration', String(cfg.duration)], {stdio: 'inherit'});
+    const an = JSON.parse(fs.readFileSync(path.join(dir, 'analysis.json'), 'utf8'));
+    if (start === undefined) cfg.audioStart = an.audioStart; cfg.bpm = an.bpm; cfg.beats = an.beats;
+    cfg.alignReport = JSON.parse(fs.readFileSync(path.join(dir, 'lyrics.align.json'), 'utf8')).lines.filter((l) => l.approx).map((l) => `${l.start}s "${l.text}"`);
+  } catch (e) { missing.push('ALINEACIÓN automática falló (' + e.message + '). Pon lyrics.lrc manualmente.'); }
+}
 if (src) {
   fs.mkdirSync('.cache', {recursive: true});
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(cfg.audioStart), '-t', String(cfg.duration), '-i', path.join(dir, src), '-b:a', '256k', path.join(dir, 'clip.mp3')]);
@@ -55,10 +64,15 @@ if (src) {
 } else if (!(cfg.audio && fs.existsSync(`public/${cfg.audio}`))) { cfg.audio = undefined; missing.push(`AUDIO: falta ${dir}/source.mp3 (archivo que tengas autorizado). El video saldrá SIN sonido.`); }
 // 5) Letras sincronizadas: lyrics.lrc propio/licenciado ([mm:ss.xx] texto). Marcas: *rosa*  _cursiva_
 const lrc = found(dir, 'lyrics', ['lrc']);
-if (lrc) cfg.lyrics = fs.readFileSync(path.join(dir, lrc), 'utf8').split('\n').map((l) => l.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.+)$/)).filter(Boolean).map((m) => ({t: +m[1] * 60 + +m[2], text: m[3].trim()}));
-else missing.push(`LETRAS: falta ${dir}/lyrics.lrc con marcas de tiempo. Sin ellas la escena 3 muestra solo título y artista (no se inventan letras).`);
+if (lrc) {
+  const al = fs.existsSync(path.join(dir, 'lyrics.align.json')) ? JSON.parse(fs.readFileSync(path.join(dir, 'lyrics.align.json'), 'utf8')).lines : [];
+  cfg.lyrics = fs.readFileSync(path.join(dir, lrc), 'utf8').split('\n').map((l) => l.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.+)$/)).filter(Boolean).map((m, i) => ({t: +m[1] * 60 + +m[2], ...(al[i] ? {end: al[i].end} : {}), text: m[3].trim()}));
+}
+else missing.push(`LETRAS: falta ${dir}/lyrics.pdf o lyrics.lrc con marcas de tiempo. Sin ellas la escena 3 muestra solo título y artista (no se inventan letras).`);
 
+if (src) cfg.songLength = Math.round(+execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(dir, src)]).toString());
 fs.writeFileSync(path.join(dir, 'song.json'), JSON.stringify(cfg, null, 2));
+if (cfg.alignReport?.length) console.log(`ℹ Líneas con alineación aproximada: ${cfg.alignReport.join(' | ')}`);
 console.log(`\n== ${cfg.title} — ${cfg.artist} (${cfg.duration}s) ==`);
 missing.forEach((m) => console.log('⚠ FALTA ' + m));
 if (noRender) process.exit(0);

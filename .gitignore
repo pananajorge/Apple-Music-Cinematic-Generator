@@ -1,3 +1,11 @@
 node_modules
 out
 .cache
+.cache
+public/songs/*/.vocals.npy
+public/songs/*/.asr.json
+public/songs/*/source.*
+public/songs/*/clip.mp3
+# Material con derechos de autor (audio, letras, imágenes de terceros): solo local
+public/songs/*/
+!public/songs/example/

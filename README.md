@@ -15,10 +15,14 @@ Carpeta de la canción: `public/songs/<slug>/`
 | `cover.jpg` | portada (se descarga sola si hay red) | degradado de colores |
 | `photo.png` | foto del artista (PNG recortado ideal) | se usa la portada |
 | `source.mp3` | audio que tengas autorizado | video sin sonido |
-| `lyrics.lrc` | letras con tiempos `[00:52.30] texto` (tuyas/licenciadas) | escena 3 muestra título y artista |
+| `lyrics.pdf` / `lyrics.txt` | solo el texto de la letra: **los tiempos se calculan solos** | escena 3 muestra título y artista |
+| `lyrics.lrc` | opcional: tiempos propios `[00:52.30] texto` (si existe, no se recalcula) | — |
 
 Marcado en letras: `*palabra*` = rosa, `_palabra_` = cursiva elegante rosa.
-`--start` = segundo de la canción donde empieza el clip (hazlo coincidir con el estribillo); `--bpm` ajusta los cortes de escena al pulso.
+### Alineación automática (sin dar tiempos ni segundo de inicio)
+Con `source.mp3` + `lyrics.pdf`, `scripts/align_lyrics.py` hace: separación vocal (UVR-MDX) → reconocimiento con marcas de tiempo (Parakeet TDT) → alineación letra↔transcripción → elige el fragmento del primer estribillo (el gancho cae en la escena de letras) → detecta beats por transitorios. Genera `lyrics.lrc`, `lyrics.align.json` (confianza por línea) y `analysis.json`. Las líneas con poca coincidencia se avisan como aproximadas; nunca se inventan tiempos de forma arbitraria.
+Requisitos: `pip install sherpa-onnx numpy scipy soundfile` y `pdftotext`; los modelos (~550 MB) se descargan una vez a `.cache/models`.
+Opcionales: `--start <s>` fuerza el inicio del clip.
 
 Vista previa: `npm run studio`. Ejemplo: `npm run example` → `out/example-30s.mp4`.
 Si Chromium no se descarga, define `CHROME_PATH=/ruta/a/chrome`.

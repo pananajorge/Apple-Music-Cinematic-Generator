@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, Art, SANS, easeIO, pulse, tween} from '../theme';
+import {Ambient, Art, SANS, SeqOffset, easeIO, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 const Ic = ({d, s = 76}: {d: string; s?: number}) => (
@@ -17,7 +17,7 @@ export const Player: React.FC<{cfg: SongConfig; cover?: string; len: number; clo
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
-  const p = pulse(f, fps, cfg.bpm);
+  const p = usePulse(cfg);
   const enter = spring({frame: f, fps, config: {damping: 18, stiffness: 90}});
   const cl = tween(f, closeAt, len, 0, 1, easeIO);
   const flash = tween(f, closeAt + 4, closeAt + 14, 0, 1) * (1 - tween(f, closeAt + 14, len - 4, 0, 1));
@@ -25,8 +25,10 @@ export const Player: React.FC<{cfg: SongConfig; cover?: string; len: number; clo
   const rx = (1 - enter) * -20 + Math.cos(f / 46) * 5 + cl * 14;
   const sc = (0.75 + enter * 0.25) * (1 - cl * 0.55) * (1 + p * 0.008);
   const pressed = tween(f, 26, 32, 1, 0.88, (x) => x) * 0 + (f > 30 && f < 38 ? 0.9 : 1);
-  const prog = tween(f, 8, len, 0.04, 0.34, (x) => x);
-  const secs = (f / fps) + 8;
+  const off = React.useContext(SeqOffset);
+  const total = cfg.songLength ?? 215;
+  const secs = cfg.audioStart + (f + off) / fps;
+  const prog = secs / total;
   const sheen = tween(f, 10, 60, -40, 140, easeIO);
   return (
     <AbsoluteFill>
@@ -51,7 +53,7 @@ export const Player: React.FC<{cfg: SongConfig; cover?: string; len: number; clo
               </div>
             </div>
             <div style={{display: 'flex', justifyContent: 'space-between', fontSize: 28, fontWeight: 600, color: 'rgba(255,255,255,.55)', marginTop: 16}}>
-              <span>{fmt(secs)}</span><span>-{fmt(Math.max(0, 215 - secs))}</span>
+              <span>{fmt(secs)}</span><span>-{fmt(Math.max(0, total - secs))}</span>
             </div>
           </div>
           <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 110, marginTop: 14}}>

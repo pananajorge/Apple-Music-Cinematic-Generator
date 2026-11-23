@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, SANS, SERIF, pulse, tween} from '../theme';
+import {Ambient, SANS, SERIF, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 type Tok = {w: string; kind: 'n' | 'hi' | 'it'};
@@ -26,12 +26,12 @@ export const Lyrics: React.FC<{cfg: SongConfig; start: number; len: number}> = (
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
-  const p = pulse(f, fps, cfg.bpm);
+  const p = usePulse(cfg);
   const t0 = start / fps;
   let lines: {at: number; end: number; text: string}[];
-  const own = (cfg.lyrics ?? []).map((l) => ({at: l.t - cfg.audioStart - t0, text: l.text})).filter((l) => l.at >= -0.2 && l.at < len / fps - 0.4);
+  const own = (cfg.lyrics ?? []).map((l) => ({at: l.t - cfg.audioStart - t0, end: l.end !== undefined ? l.end - cfg.audioStart - t0 + 0.5 : undefined, text: l.text})).filter((l) => l.at >= -0.2 && l.at < len / fps - 0.4);
   if (own.length) {
-    lines = own.map((l, i) => ({...l, end: Math.min(own[i + 1]?.at ?? len / fps, l.at + 3.2)}));
+    lines = own.map((l, i) => ({...l, end: Math.min(own[i + 1]?.at ?? len / fps, l.end ?? l.at + 3.2)}));
   } else {
     const tw = cfg.title.split(' ');
     const words = [`*${tw[0]}*`, ...tw.slice(1), ...cfg.artist.split(' ').map((w) => `_${w}_`)];
@@ -61,8 +61,8 @@ export const Lyrics: React.FC<{cfg: SongConfig; start: number; len: number}> = (
                     const i = wi++;
                     const s = spring({frame: lf - i * 3, fps, config: {damping: 16, stiffness: 140}});
                     const common: React.CSSProperties = {fontSize: size, transform: `translateY(${(1 - s) * 90}px) scale(${0.9 + s * 0.1})`, opacity: s, filter: `blur(${(1 - s) * 12}px)`, display: 'inline-block'};
-                    if (t.kind === 'it') return <span key={ti} style={{...common, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 400, color: '#ff4f9a', fontSize: size * 1.12, textTransform: 'none', letterSpacing: -2, textShadow: '0 0 50px #ff4f9a88'}}>{t.w}</span>;
-                    return <span key={ti} style={{...common, fontFamily: SANS, fontWeight: 800, letterSpacing: -size * 0.04, textTransform: 'uppercase', color: t.kind === 'hi' ? '#ff4f9a' : '#fff', textShadow: t.kind === 'hi' ? '0 0 60px #ff4f9a88' : 'none'}}>{t.w}</span>;
+                    if (t.kind === 'it') return <span key={ti} style={{...common, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 400, color: c.accent, fontSize: size * 1.12, textTransform: 'none', letterSpacing: -2, textShadow: `0 0 50px ${c.accent}88`}}>{t.w}</span>;
+                    return <span key={ti} style={{...common, fontFamily: SANS, fontWeight: 800, letterSpacing: -size * 0.04, textTransform: 'uppercase', color: t.kind === 'hi' ? c.accent : '#fff', textShadow: t.kind === 'hi' ? `0 0 60px ${c.accent}88` : 'none'}}>{t.w}</span>;
                   })}
                 </div>
               ))}

@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, Art, SANS, easeIO, pulse, tween} from '../theme';
+import {Ambient, Art, SANS, easeIO, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 // Escena 4: foto (idealmente PNG recortado) con nombre gigante detrás, zoom lento y paralaje.
@@ -8,7 +8,7 @@ export const Artist: React.FC<{cfg: SongConfig; photo?: string; cover?: string; 
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
-  const p = pulse(f, fps, cfg.bpm);
+  const p = usePulse(cfg);
   const inn = tween(f, 0, 18, 0, 1);
   const zoom = tween(f, 0, len, 1.28, 1.02, (x) => x);
   const out = tween(f, len - 14, len, 0, 1, easeIO);
@@ -24,7 +24,7 @@ export const Artist: React.FC<{cfg: SongConfig; photo?: string; cover?: string; 
           ))}
         </div>
         {photo ? (
-          <img src={photo} style={{position: 'absolute', left: 90, bottom: 160, width: 900, height: 1250, objectFit: 'cover', objectPosition: 'center top', borderRadius: photo.endsWith('.png') ? 0 : 60, transform: `scale(${zoom + p * 0.01}) translateY(${(1 - inn) * 120}px)`, transformOrigin: '50% 80%', opacity: inn, WebkitMaskImage: 'linear-gradient(#000 80%, transparent)', filter: `drop-shadow(0 40px 90px ${c.primary})`}} />
+          <img src={photo} style={{position: 'absolute', left: 90, bottom: 160, width: 900, height: 1250, objectFit: photo.endsWith('.png') ? 'contain' : 'cover', objectPosition: 'center bottom', borderRadius: photo.endsWith('.png') ? 0 : 60, transform: `scale(${zoom + p * 0.01}) translateY(${(1 - inn) * 120}px)`, transformOrigin: '50% 80%', opacity: inn, WebkitMaskImage: 'linear-gradient(#000 80%, transparent)', filter: `drop-shadow(0 40px 90px ${c.primary})`}} />
         ) : (
           <div style={{position: 'absolute', left: 150, top: 560, width: 780, height: 780, transform: `scale(${zoom * 0.95}) translateY(${(1 - inn) * 120}px) rotateY(${Math.sin(f / 40) * 8}deg)`, opacity: inn, boxShadow: `0 60px 160px ${c.primary}`, borderRadius: 56, overflow: 'hidden'}}>
             <Art src={cover} colors={c} style={{width: '100%', height: '100%'}} />

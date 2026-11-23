@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, SANS, easeIO, pulse, tween} from '../theme';
+import {Ambient, SANS, easeIO, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 // Escenas 1+2: cuadrado luminoso -> tarjeta 3D flotante -> vuela hacia cámara.
@@ -8,7 +8,7 @@ export const Intro: React.FC<{cfg: SongConfig; a: number; total: number}> = ({cf
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
-  const p = pulse(f, fps, cfg.bpm);
+  const p = usePulse(cfg);
   const appear = tween(f, 0, a * 0.55, 0, 1);
   const morph = tween(f, a * 0.78, a * 1.25, 0, 1, easeIO); // cuadrado -> tarjeta
   const fly = tween(f, total - 20, total, 0, 1, easeIO); // la tarjeta atraviesa la cámara

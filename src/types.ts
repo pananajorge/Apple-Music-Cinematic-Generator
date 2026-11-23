@@ -1,4 +1,4 @@
-export type LyricLine = {t: number; text: string}; // t = segundos en la CANCIÓN. Marcado: *rosa*  _cursiva rosa_
+export type LyricLine = {t: number; end?: number; text: string}; // t = segundos en la CANCIÓN. Marcado: *rosa*  _cursiva rosa_
 export type Colors = {primary: string; secondary: string; accent: string};
 export type SongConfig = {
   slug: string;
@@ -10,7 +10,9 @@ export type SongConfig = {
   photo?: string; // foto del artista (PNG recortado ideal)
   audio?: string; // fragmento ya cortado
   audioStart: number; // segundo de la canción donde empieza el fragmento
+  songLength?: number; // duración total de la canción (s) para el reproductor
   bpm?: number;
+  beats?: number[]; // segundos desde el inicio del clip (detección por transitorios)
   lyrics?: LyricLine[];
   colors: Colors;
 };

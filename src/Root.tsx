@@ -14,6 +14,6 @@ export const Root: React.FC = () => (
     fps={FPS}
     durationInFrames={buildTimeline(30).total}
     defaultProps={example as SongConfig}
-    calculateMetadata={({props}) => ({durationInFrames: buildTimeline((props as SongConfig).duration, (props as SongConfig).bpm).total})}
+    calculateMetadata={({props}) => ({durationInFrames: buildTimeline((props as SongConfig).duration, (props as SongConfig).bpm, (props as SongConfig).beats).total})}
   />
 );
