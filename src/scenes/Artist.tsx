@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, Art, SANS, easeIO, usePulse, tween} from '../theme';
+import {Ambient, Art, SANS, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 // Escena 4: foto (idealmente PNG recortado) con nombre gigante detrás, zoom lento y paralaje.
@@ -11,13 +11,13 @@ export const Artist: React.FC<{cfg: SongConfig; photo?: string; cover?: string; 
   const p = usePulse(cfg);
   const inn = tween(f, 0, 18, 0, 1);
   const zoom = tween(f, 0, len, 1.28, 1.02, (x) => x);
-  const out = tween(f, len - 14, len, 0, 1, easeIO);
+  
   const name = cfg.artist.toUpperCase();
   const words = name.split(' ');
   return (
-    <AbsoluteFill style={{opacity: 1 - out * 0.0}}>
+    <AbsoluteFill>
       <Ambient colors={c} strength={0.9} />
-      <AbsoluteFill style={{filter: `blur(${(1 - inn) * 20 + out * 18}px)`, transform: `scale(${1 - out * 0.35}) rotateY(${out * 35}deg)`, perspective: 1600}}>
+      <AbsoluteFill style={{filter: `blur(${(1 - inn) * 20}px)`, perspective: 1600}}>
         <div style={{position: 'absolute', left: 0, right: 0, top: 210, display: 'flex', flexDirection: 'column', alignItems: 'center', transform: `translateY(${tween(f, 0, len, 40, -50, (x) => x)}px)`}}>
           {words.map((w, i) => (
             <div key={i} style={{fontFamily: SANS, fontWeight: 800, fontSize: Math.min(300, 1000 / Math.max(w.length * 0.6, 3)), lineHeight: 0.92, letterSpacing: -10, color: 'transparent', WebkitTextStroke: `3px ${i % 2 ? c.accent : 'rgba(255,255,255,.55)'}`, opacity: 0.9}}>{w}</div>
@@ -31,7 +31,7 @@ export const Artist: React.FC<{cfg: SongConfig; photo?: string; cover?: string; 
           </div>
         )}
       </AbsoluteFill>
-      <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 55%, transparent 40%, rgba(0,0,0,.75))'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 55%, transparent 30%, rgba(0,0,0,.8)), linear-gradient(transparent 35%, rgba(0,0,0,.45) 60%, transparent 85%)'}} />
     </AbsoluteFill>
   );
 };

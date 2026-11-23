@@ -147,7 +147,7 @@ def main():
     out = []; k = 0
     for li, ws in enumerate(LW):
         n = len(ws); ii = range(k, k + n); k += n
-        out.append({'text': lines[li], 'start': round(T[ii[0]], 2), 'end': round(max(E[i] for i in ii), 2), 'matched': sum(i in mp for i in ii), 'words': n})
+        out.append({'text': lines[li], 'start': round(T[ii[0]], 2), 'end': round(max(E[i] for i in ii), 2), 'matched': sum(i in mp for i in ii), 'words': n, 'ws': [round(T[i], 2) for i in ii]})
     for a, b in zip(out, out[1:]): a['end'] = round(min(a['end'], b['start'] - .05), 2) if b['start'] > a['start'] else a['end']
     # verificación: actividad vocal real dentro de cada línea
     env = np.sqrt(np.convolve(y ** 2, np.ones(1600) / 1600, 'same')); thr = np.percentile(env, 60)

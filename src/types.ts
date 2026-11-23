@@ -1,4 +1,4 @@
-export type LyricLine = {t: number; end?: number; text: string}; // t = segundos en la CANCIÓN. Marcado: *rosa*  _cursiva rosa_
+export type LyricLine = {t: number; end?: number; ws?: number[]; text: string}; // ws = inicio de cada palabra (s en la canción) // t = segundos en la CANCIÓN. Marcado: *rosa*  _cursiva rosa_
 export type Colors = {primary: string; secondary: string; accent: string};
 export type SongConfig = {
   slug: string;

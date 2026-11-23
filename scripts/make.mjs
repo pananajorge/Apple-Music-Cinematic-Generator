@@ -66,7 +66,7 @@ if (src) {
 const lrc = found(dir, 'lyrics', ['lrc']);
 if (lrc) {
   const al = fs.existsSync(path.join(dir, 'lyrics.align.json')) ? JSON.parse(fs.readFileSync(path.join(dir, 'lyrics.align.json'), 'utf8')).lines : [];
-  cfg.lyrics = fs.readFileSync(path.join(dir, lrc), 'utf8').split('\n').map((l) => l.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.+)$/)).filter(Boolean).map((m, i) => ({t: +m[1] * 60 + +m[2], ...(al[i] ? {end: al[i].end} : {}), text: m[3].trim()}));
+  cfg.lyrics = fs.readFileSync(path.join(dir, lrc), 'utf8').split('\n').map((l) => l.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.+)$/)).filter(Boolean).map((m, i) => ({t: +m[1] * 60 + +m[2], ...(al[i] ? {end: al[i].end, ws: al[i].ws} : {}), text: m[3].trim()}));
 }
 else missing.push(`LETRAS: falta ${dir}/lyrics.pdf o lyrics.lrc con marcas de tiempo. Sin ellas la escena 3 muestra solo título y artista (no se inventan letras).`);
 

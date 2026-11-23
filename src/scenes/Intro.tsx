@@ -4,7 +4,7 @@ import {Ambient, SANS, easeIO, usePulse, tween} from '../theme';
 import type {SongConfig} from '../types';
 
 // Escenas 1+2: cuadrado luminoso -> tarjeta 3D flotante -> vuela hacia cámara.
-export const Intro: React.FC<{cfg: SongConfig; a: number; total: number}> = ({cfg, a, total}) => {
+export const Intro: React.FC<{cfg: SongConfig; a: number; total: number; photo?: string}> = ({cfg, a, total, photo}) => {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
@@ -31,8 +31,13 @@ export const Intro: React.FC<{cfg: SongConfig; a: number; total: number}> = ({cf
           <div style={{position: 'absolute', inset: 0, borderRadius: 40 + morph * 60, background: grad, boxShadow: `0 0 160px ${c.accent}cc, 0 60px 180px ${c.primary}99, inset 0 0 90px rgba(255,255,255,.35)`, overflow: 'hidden'}}>
             <div style={{position: 'absolute', inset: 0, background: `radial-gradient(circle at ${30 + Math.sin(f / 30) * 25}% ${25 + Math.cos(f / 24) * 20}%, rgba(255,255,255,.75), transparent 45%)`, mixBlendMode: 'soft-light'}} />
             <div style={{position: 'absolute', left: 56, top: 48, fontFamily: SANS, fontWeight: 600, fontSize: 40, color: 'rgba(255,255,255,.85)', opacity: morph}}>{cfg.album ?? 'Now Playing'}</div>
-            <div style={{position: 'absolute', left: 56, bottom: 44, right: 56, fontFamily: SANS, fontWeight: 800, fontSize: Math.min(150, 1500 / Math.max(cfg.title.length, 8)), letterSpacing: -4, lineHeight: 0.95, color: '#fff', opacity: morph, transform: `translateY(${(1 - morph) * 60}px)`, textShadow: '0 4px 40px rgba(0,0,0,.25)'}}>{cfg.title}</div>
+            <div style={{position: 'absolute', left: 56, bottom: 44, right: photo ? 400 : 56, fontFamily: SANS, fontWeight: 800, fontSize: photo ? 128 : Math.min(150, 1500 / Math.max(cfg.title.length, 8)), letterSpacing: -4, lineHeight: 0.95, color: '#fff', opacity: morph, transform: `translateY(${(1 - morph) * 60}px)`, textShadow: '0 4px 40px rgba(0,0,0,.25)'}}>{cfg.title}</div>
           </div>
+          {photo && (
+            <div style={{position: 'absolute', inset: 0, clipPath: `inset(-1100px -300px 0px -300px round 0 0 ${40 + morph * 60}px ${40 + morph * 60}px)`, pointerEvents: 'none'}}>
+              <img src={photo} style={{position: 'absolute', right: 18, bottom: 0, height: 1010, transform: `translateZ(90px) translateY(${(1 - tween(f, a * 0.95, a * 1.45, 0, 1)) * 240}px) scale(${0.92 + tween(f, a * 0.95, a * 1.45, 0, 0.08)})`, transformOrigin: '50% 100%', opacity: tween(f, a * 0.95, a * 1.3, 0, 1), filter: `drop-shadow(0 30px 60px rgba(0,0,0,.55))`}} />
+            </div>
+          )}
         </div>
       </AbsoluteFill>
     </AbsoluteFill>

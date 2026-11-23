@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Ambient, SANS, SERIF, usePulse, tween} from '../theme';
+import {SANS, SERIF, tween, usePulse, easeIO} from '../theme';
 import type {SongConfig} from '../types';
 
 type Tok = {w: string; kind: 'n' | 'hi' | 'it'};
@@ -11,66 +11,69 @@ const parse = (s: string): Tok[] =>
     return {w, kind: 'n'};
   });
 const rows = (toks: Tok[], max = 11) => {
-  const out: Tok[][] = [[]];
+  const out: {t: Tok; i: number}[][] = [[]];
   let len = 0;
-  toks.forEach((t) => {
+  toks.forEach((t, i) => {
     if (len + t.w.length > max && out[out.length - 1].length) { out.push([]); len = 0; }
-    out[out.length - 1].push(t); len += t.w.length + 1;
+    out[out.length - 1].push({t, i}); len += t.w.length + 1;
   });
   return out;
 };
 
-// Escena 3: tipografía de videoclip. Solo muestra letras con marca de tiempo aportadas por el usuario;
-// sin letras usa el título/artista (nunca inventa texto).
-export const Lyrics: React.FC<{cfg: SongConfig; start: number; len: number}> = ({cfg, start, len}) => {
+// Capa de letras continua (todo el video): cada línea permanece mientras se canta y cada palabra se ilumina
+// en el instante en que suena (tiempos de la alineación automática). Sin letras usa título/artista.
+export const Lyrics: React.FC<{cfg: SongConfig; introEnd: number}> = ({cfg, introEnd}) => {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const c = cfg.colors;
   const p = usePulse(cfg);
-  const t0 = start / fps;
-  let lines: {at: number; end: number; text: string}[];
-  const own = (cfg.lyrics ?? []).map((l) => ({at: l.t - cfg.audioStart - t0, end: l.end !== undefined ? l.end - cfg.audioStart - t0 + 0.5 : undefined, text: l.text})).filter((l) => l.at >= -0.2 && l.at < len / fps - 0.4);
-  if (own.length) {
-    lines = own.map((l, i) => ({...l, end: Math.min(own[i + 1]?.at ?? len / fps, l.end ?? l.at + 3.2)}));
-  } else {
-    const tw = cfg.title.split(' ');
-    const words = [`*${tw[0]}*`, ...tw.slice(1), ...cfg.artist.split(' ').map((w) => `_${w}_`)];
-    const step = len / fps / Math.ceil(words.length / 2);
-    lines = Array.from({length: Math.ceil(words.length / 2)}, (_, i) => ({at: i * step, end: (i + 1) * step, text: words.slice(i * 2, i * 2 + 2).join(' ')}));
-  }
-  const bg = tween(f, 0, 12, 0, 1);
-  const cur = lines.find((l) => f / fps >= l.at && f / fps < l.end);
+  const now = f / fps;
+  type L = {at: number; end: number; text: string; ws?: number[]};
+  const own: L[] = (cfg.lyrics ?? [])
+    .map((l) => ({at: l.t - cfg.audioStart, end: (l.end ?? l.t + 3) - cfg.audioStart + 0.4, text: l.text, ws: l.ws?.map((x) => x - cfg.audioStart)}))
+    .filter((l) => l.end > 0 && l.at < cfg.duration);
+  const lines: L[] = own.length
+    ? own.map((l, i) => {
+        const nx = own[i + 1]?.at;
+        // mantiene la línea en pantalla hasta la siguiente si el hueco es corto: nunca queda vacío mientras se canta
+        return {...l, end: nx !== undefined && nx - l.end < 2.4 ? nx - 0.02 : Math.min(l.end, nx ?? l.end)};
+      })
+    : (() => {
+        const tw = cfg.title.split(' '); const w = [`*${tw[0]}*`, ...tw.slice(1), ...cfg.artist.split(' ').map((x) => `_${x}_`)];
+        const n = Math.ceil(w.length / 2), st = cfg.duration / n;
+        return Array.from({length: n}, (_, i) => ({at: i * st, end: (i + 1) * st, text: w.slice(i * 2, i * 2 + 2).join(' ')}));
+      })();
+  const low = tween(f, introEnd - 14, introEnd + 10, 1, 0, easeIO); // durante la intro las letras van abajo y más pequeñas
   return (
-    <AbsoluteFill>
-      <Ambient colors={c} strength={0.55 + p * 0.25} />
-      <AbsoluteFill style={{opacity: bg}}>
-        {lines.map((l, li) => {
-          const lf = f - Math.round(l.at * fps);
-          const lend = Math.round((l.end - l.at) * fps);
-          if (lf < 0 || lf > lend + 6) return null;
-          const rs = rows(parse(l.text));
-          const longest = Math.max(...rs.map((r) => r.map((t) => t.w).join(' ').length), 4);
-          const size = Math.min(230, 960 / (longest * 0.74));
-          const out = tween(lf, lend - 4, lend + 6, 0, 1);
-          let wi = 0;
-          return (
-            <div key={li} style={{position: 'absolute', left: 60, right: 60, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', transform: `scale(${1 + p * 0.018 + lf * 0.0004}) rotate(${-2 + li % 2 * 4}deg)`, opacity: 1 - out, filter: `blur(${out * 14}px)`}}>
-              {rs.map((r, ri) => (
-                <div key={ri} style={{display: 'flex', gap: size * 0.22, lineHeight: 0.98}}>
-                  {r.map((t, ti) => {
-                    const i = wi++;
-                    const s = spring({frame: lf - i * 3, fps, config: {damping: 16, stiffness: 140}});
-                    const common: React.CSSProperties = {fontSize: size, transform: `translateY(${(1 - s) * 90}px) scale(${0.9 + s * 0.1})`, opacity: s, filter: `blur(${(1 - s) * 12}px)`, display: 'inline-block'};
-                    if (t.kind === 'it') return <span key={ti} style={{...common, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 400, color: c.accent, fontSize: size * 1.12, textTransform: 'none', letterSpacing: -2, textShadow: `0 0 50px ${c.accent}88`}}>{t.w}</span>;
-                    return <span key={ti} style={{...common, fontFamily: SANS, fontWeight: 800, letterSpacing: -size * 0.04, textTransform: 'uppercase', color: t.kind === 'hi' ? c.accent : '#fff', textShadow: t.kind === 'hi' ? `0 0 60px ${c.accent}88` : 'none'}}>{t.w}</span>;
-                  })}
-                </div>
-              ))}
-            </div>
-          );
-        })}
-        {!cur && null}
-      </AbsoluteFill>
+    <AbsoluteFill style={{pointerEvents: 'none'}}>
+      {lines.map((l, li) => {
+        if (now < l.at - 0.2 || now > l.end + 0.35) return null;
+        const lf = f - Math.round(l.at * fps);
+        const toks = parse(l.text);
+        const timed = l.ws && l.ws.length === toks.length ? l.ws : undefined;
+        const rs = rows(toks);
+        const longest = Math.max(...rs.map((r) => r.map((x) => x.t.w).join(' ').length), 4);
+        const size = Math.min(210, 960 / (longest * 0.74));
+        const enter = spring({frame: lf + 6, fps, config: {damping: 18, stiffness: 120}});
+        const out = tween(now, l.end - 0.05, l.end + 0.35, 0, 1);
+        return (
+          <div key={li} style={{position: 'absolute', left: 60, right: 60, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', transform: `translateY(${330 + low * 270 + (1 - enter) * 50 - out * 40}px) scale(${(1 - low * 0.3) * (1 + p * 0.016)}) rotate(${(li % 2 ? 1.6 : -1.6)}deg)`, opacity: Math.min(1, enter) * (1 - out), filter: `blur(${out * 12 + (1 - enter) * 10}px)`}}>
+            {rs.map((r, ri) => (
+              <div key={ri} style={{display: 'flex', gap: size * 0.22, lineHeight: 0.98}}>
+                {r.map(({t, i}) => {
+                  const wt = timed ? timed[i] : l.at + i * 0.18;
+                  const on = spring({frame: f - Math.round(wt * fps), fps, config: {damping: 11, stiffness: 190}});
+                  const sung = now >= wt - 0.02;
+                  const pop = sung ? 1 + Math.max(0, 1 - (now - wt) * 4) * 0.1 * on : 1;
+                  const base: React.CSSProperties = {fontSize: size, display: 'inline-block', transform: `scale(${pop}) translateY(${(1 - on) * 14}px)`, opacity: 0.38 + 0.62 * on, transformOrigin: '50% 80%', textShadow: `0 6px 40px rgba(0,0,0,.65)${sung && t.kind !== 'n' ? `, 0 0 60px ${c.accent}aa` : ''}`};
+                  if (t.kind === 'it') return <span key={i} style={{...base, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 400, color: c.accent, fontSize: size * 1.12, letterSpacing: -2}}>{t.w}</span>;
+                  return <span key={i} style={{...base, fontFamily: SANS, fontWeight: 800, letterSpacing: -size * 0.04, textTransform: 'uppercase', color: t.kind === 'hi' ? c.accent : '#fff'}}>{t.w}</span>;
+                })}
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </AbsoluteFill>
   );
 };
