@@ -1,0 +1,15 @@
+{
+  "slug": "example",
+  "title": "Tu Canción",
+  "artist": "Artista Demo",
+  "album": "Álbum Demo",
+  "duration": 30,
+  "audio": "songs/example/audio.mp3",
+  "audioStart": 0,
+  "bpm": 120,
+  "colors": {
+    "primary": "#b44cff",
+    "secondary": "#5b2bff",
+    "accent": "#ff5aa5"
+  }
+}
