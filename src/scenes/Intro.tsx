@@ -20,11 +20,11 @@ export const Intro: React.FC<{cfg: SongConfig; a: number; total: number; photo?:
   const camZ = tween(f, 0, total, -300, 160, (x) => x);
   const angle = 135 + f * 2.4;
   const grad = `linear-gradient(${angle}deg, ${c.accent}, ${c.primary} 45%, ${c.secondary} 85%)`;
-  const scale = (0.35 + appear * 0.65) * (1 + fly * 7) * (1 + p * 0.015);
+  const scale = (0.35 + appear * 0.65) * (1 + fly * 1.6) * (1 + p * 0.015);
   return (
     <AbsoluteFill>
       <Ambient colors={c} strength={appear} />
-      <AbsoluteFill style={{perspective: 1500, perspectiveOrigin: '50% 45%', opacity: 1 - fly * 0.0, filter: `blur(${fly * 16}px)`}}>
+      <AbsoluteFill style={{perspective: 1500, perspectiveOrigin: '50% 45%', opacity: 1 - fly}}>
         {/* halo de luz */}
         <div style={{position: 'absolute', left: 540 - 700, top: 960 - 700, width: 1400, height: 1400, borderRadius: '50%', background: `radial-gradient(circle, ${c.accent}aa, ${c.primary}44 40%, transparent 70%)`, opacity: appear * (0.7 + p * 0.25), transform: `scale(${0.6 + appear * 0.5 + morph * 0.2})`, filter: 'blur(30px)'}} />
         <div style={{position: 'absolute', left: 540 - w / 2, top: 960 - h / 2, width: w, height: h, transformStyle: 'preserve-3d', transform: `translateZ(${camZ}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${scale})`, opacity: appear}}>
@@ -35,7 +35,7 @@ export const Intro: React.FC<{cfg: SongConfig; a: number; total: number; photo?:
           </div>
           {photo && (
             <div style={{position: 'absolute', inset: 0, clipPath: `inset(-1100px -300px 0px -300px round 0 0 ${40 + morph * 60}px ${40 + morph * 60}px)`, pointerEvents: 'none'}}>
-              <img src={photo} style={{position: 'absolute', right: 18, bottom: 0, height: 1010, transform: `translateZ(90px) translateY(${(1 - tween(f, a * 0.95, a * 1.45, 0, 1)) * 240}px) scale(${0.92 + tween(f, a * 0.95, a * 1.45, 0, 0.08)})`, transformOrigin: '50% 100%', opacity: tween(f, a * 0.95, a * 1.3, 0, 1), filter: `drop-shadow(0 30px 60px rgba(0,0,0,.55))`}} />
+              <img src={photo} style={{position: 'absolute', right: 18, bottom: 0, height: 1010, transform: `translateZ(90px) translateY(${(1 - tween(f, a * 0.95, a * 1.45, 0, 1)) * 240}px) scale(${0.92 + tween(f, a * 0.95, a * 1.45, 0, 0.08)})`, transformOrigin: '50% 100%', opacity: tween(f, a * 0.95, a * 1.3, 0, 1)}} />
             </div>
           )}
         </div>

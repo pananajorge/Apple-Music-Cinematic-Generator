@@ -57,7 +57,7 @@ export const Lyrics: React.FC<{cfg: SongConfig; introEnd: number}> = ({cfg, intr
         const enter = spring({frame: lf + 6, fps, config: {damping: 18, stiffness: 120}});
         const out = tween(now, l.end - 0.05, l.end + 0.35, 0, 1);
         return (
-          <div key={li} style={{position: 'absolute', left: 60, right: 60, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', transform: `translateY(${330 + low * 270 + (1 - enter) * 50 - out * 40}px) scale(${(1 - low * 0.3) * (1 + p * 0.016)}) rotate(${(li % 2 ? 1.6 : -1.6)}deg)`, opacity: Math.min(1, enter) * (1 - out), filter: `blur(${out * 12 + (1 - enter) * 10}px)`}}>
+          <div key={li} style={{position: 'absolute', left: 60, right: 60, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', transform: `translateY(${330 + low * 270 + (1 - enter) * 50 - out * 40}px) scale(${(1 - low * 0.3) * (1 + p * 0.016)}) rotate(${(li % 2 ? 1.6 : -1.6)}deg)`, opacity: Math.min(1, enter) * (1 - out), filter: out * 12 + (1 - enter) * 10 > 0.3 ? `blur(${out * 12 + (1 - enter) * 10}px)` : undefined}}>
             {rs.map((r, ri) => (
               <div key={ri} style={{display: 'flex', gap: size * 0.22, lineHeight: 0.98}}>
                 {r.map(({t, i}) => {
@@ -65,7 +65,7 @@ export const Lyrics: React.FC<{cfg: SongConfig; introEnd: number}> = ({cfg, intr
                   const on = spring({frame: f - Math.round(wt * fps), fps, config: {damping: 11, stiffness: 190}});
                   const sung = now >= wt - 0.02;
                   const pop = sung ? 1 + Math.max(0, 1 - (now - wt) * 4) * 0.1 * on : 1;
-                  const base: React.CSSProperties = {fontSize: size, display: 'inline-block', transform: `scale(${pop}) translateY(${(1 - on) * 14}px)`, opacity: 0.38 + 0.62 * on, transformOrigin: '50% 80%', textShadow: `0 6px 40px rgba(0,0,0,.65)${sung && t.kind !== 'n' ? `, 0 0 60px ${c.accent}aa` : ''}`};
+                  const base: React.CSSProperties = {fontSize: size, display: 'inline-block', transform: `scale(${pop}) translateY(${(1 - on) * 14}px)`, opacity: 0.38 + 0.62 * on, transformOrigin: '50% 80%', textShadow: `0 4px 20px rgba(0,0,0,.7)${sung && t.kind !== 'n' ? `, 0 0 28px ${c.accent}99` : ''}`};
                   if (t.kind === 'it') return <span key={i} style={{...base, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 400, color: c.accent, fontSize: size * 1.12, letterSpacing: -2}}>{t.w}</span>;
                   return <span key={i} style={{...base, fontFamily: SANS, fontWeight: 800, letterSpacing: -size * 0.04, textTransform: 'uppercase', color: t.kind === 'hi' ? c.accent : '#fff'}}>{t.w}</span>;
                 })}

@@ -79,6 +79,6 @@ if (noRender) process.exit(0);
 const out = `out/${slug}-${cfg.duration}s.mp4`; fs.mkdirSync('out', {recursive: true});
 const chrome = process.env.CHROME_PATH || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 try {
-  execFileSync('npx', ['remotion', 'render', 'src/index.ts', 'MusicVideo', out, `--props=${path.join(dir, 'song.json')}`, ...(chrome ? [`--browser-executable=${chrome}`, '--chrome-mode=chrome-for-testing'] : [])], {stdio: 'inherit'});
+  execFileSync('npx', ['remotion', 'render', 'src/index.ts', 'MusicVideo', out, `--props=${path.join(dir, 'song.json')}`, ...(chrome ? [`--browser-executable=${chrome}`, '--chrome-mode=chrome-for-testing'] : []), '--timeout=240000', '--concurrency=3'], {stdio: 'inherit'});
   console.log(`\n✅ Video exportado: ${out}`);
 } catch { console.error('\n❌ El render falló: NO se generó el MP4.'); process.exit(1); }

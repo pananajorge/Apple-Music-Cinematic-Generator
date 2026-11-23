@@ -16,7 +16,7 @@ const Closer: React.FC<{at: number; end: number; accent: string; children: React
   const flash = tween(f, at + 4, at + 14, 0, 1) * (1 - tween(f, at + 14, end - 2, 0, 1));
   return (
     <AbsoluteFill>
-      <AbsoluteFill style={{transform: `scale(${1 - k * 0.2}) rotateX(${k * 10}deg)`, perspective: 1600, filter: `blur(${k * 10}px)`, opacity: 1 - tween(f, end - 20, end, 0, 1)}}>{children}</AbsoluteFill>
+      <AbsoluteFill style={{transform: k > 0 ? `scale(${1 - k * 0.2}) rotateX(${k * 10}deg)` : undefined, perspective: k > 0 ? 1600 : undefined, filter: k > 0.02 ? `blur(${k * 10}px)` : undefined, opacity: 1 - tween(f, end - 20, end, 0, 1)}}>{children}</AbsoluteFill>
       <AbsoluteFill style={{background: `radial-gradient(circle, ${accent}, transparent 60%)`, opacity: flash * 0.5, mixBlendMode: 'screen'}} />
     </AbsoluteFill>
   );
